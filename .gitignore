@@ -1,0 +1,15 @@
+# Node
+node_modules/
+
+# Env
+.env
+
+# Logs
+*.log
+
+# OS / Editor
+.DS_Store
+.vscode/
+
+# Runtime storage (si vous voulez le versionner, supprimez ces lignes)
+storage/users/**

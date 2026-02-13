@@ -1,0 +1,107 @@
+
+<!doctype html>
+<html lang="fr">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>EDC-26 — Présence sortie scolaire</title>
+		<link rel="stylesheet" href="./style.css" />
+	</head>
+	<body>
+		<div id="app">
+			<header class="topbar">
+				<div class="topbar-inner">
+					<div class="brand">
+						<div class="brand-title">Sortie scolaire</div>
+						<div class="brand-sub">EDC-26 — présence</div>
+					</div>
+					<nav class="tabs" aria-label="Navigation">
+						<button
+							type="button"
+							class="tab"
+							:class="{ active: state.currentTab === 'presence' }"
+							@click="setTab('presence')"
+						>
+							Présence
+						</button>
+						<button
+							type="button"
+							class="tab"
+							:class="{ active: state.currentTab === 'info' }"
+							@click="setTab('info')"
+						>
+							Info
+						</button>
+						<button
+							type="button"
+							class="tab"
+							:class="{ active: state.currentTab === 'compte' }"
+							@click="setTab('compte')"
+						>
+							Compte
+						</button>
+					</nav>
+				</div>
+			</header>
+
+			<main class="container app-main">
+				<!-- PAGE: PRÉSENCE -->
+				<section v-if="state.currentTab === 'presence'" class="card">
+					<h1 class="page-title">Présence — sortie scolaire</h1>
+					<p class="page-subtitle">Envoi rapide: position + photo</p>
+					<hr />
+					<button type="button" class="btn success btn-block">Vérifier présence</button>
+					<div class="spacer"></div>
+					<div class="todo">map</div>
+				</section>
+
+				<!-- PAGE: INFO -->
+				<section v-else-if="state.currentTab === 'info'" class="card">
+					<h1 class="page-title">Infos</h1>
+					<p class="page-subtitle">À compléter (consignes, horaires, contacts)</p>
+					<hr />
+					<h2 class="big-title">Déroulement</h2>
+					<div class="placeholder">(à remplir plus tard)</div>
+					<div class="spacer"></div>
+					<h2 class="big-title">Règlement</h2>
+					<div class="placeholder">(à remplir plus tard)</div>
+				</section>
+
+				<!-- PAGE: COMPTE -->
+				<section v-else class="card">
+					<h1 class="page-title">Compte</h1>
+					<p class="page-subtitle">Inscription (prototype)</p>
+					<hr />
+					<form class="form" @submit.prevent>
+						<div class="row">
+							<div class="field">
+								<label>Nom</label>
+								<input type="text" autocomplete="family-name" placeholder="Nom" />
+							</div>
+							<div class="field">
+								<label>Prénom</label>
+								<input type="text" autocomplete="given-name" placeholder="Prénom" />
+							</div>
+						</div>
+						<div class="row">
+							<div class="field">
+								<label>Email</label>
+								<input type="email" autocomplete="email" placeholder="prenom.nom@edu.vs.ch" />
+							</div>
+						</div>
+						<div class="row" style="margin-top: 10px;">
+							<button type="submit" class="btn primary">Créer</button>
+                            <button type="submit" class="btn primary">Se connecter</button>
+						</div>
+						<div class="small" style="margin-top: 10px;">
+							
+						</div>
+					</form>
+				</section>
+			</main>
+		</div>
+
+		<script type="module" src="./app.js"></script>
+	</body>
+</html>
+
