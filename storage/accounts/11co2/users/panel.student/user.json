@@ -1,0 +1,14 @@
+{
+    "userId": "cfb9c2c44fd7c3634a79742a2016297c",
+    "nom": "Panel",
+    "prenom": "Student",
+    "email": "panel.student@edu.vs.ch",
+    "role": "student",
+    "createdAt": "2026-03-29T13:17:39+00:00",
+    "paths": {
+        "pics": "pics\/",
+        "loc": "loc\/",
+        "acc": "acc\/",
+        "accDb": "acc\/account.db"
+    }
+}

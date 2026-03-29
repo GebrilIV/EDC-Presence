@@ -1,23 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # EDC-26 — Site léger de présence (sortie scolaire)
 
 But: un élève envoie **position + photo** pour prouver sa présence pendant une sortie.
@@ -49,13 +29,16 @@ ALLOWED_EMAIL_DOMAINS="ecole.fr;lycee.fr" npm run dev
 
 La géolocalisation peut être bloquée si tu ouvres `frontend/index.html` en `file://`.
 
+⚠️ Important: le système de comptes + panel utilise des endpoints **PHP** (`create_account.php`, `login.php`, pages `frontend/users/.../*.php`).
+Donc il faut servir le projet via **PHP** (sinon `python -m http.server` ne pourra pas exécuter les `.php`).
+
 Option simple:
 ```bash
-cd frontend
-python3 -m http.server 5173
+cd /chemin/vers/EDC-26/V1
+php -S 0.0.0.0:5173 -t .
 ```
 
-Puis ouvre `http://localhost:5173`.
+Puis ouvre `http://localhost:5173/frontend/`.
 
 ## APIs / Technos utilisées (pour mener le projet)
 
@@ -71,5 +54,14 @@ Puis ouvre `http://localhost:5173`.
 - **HTTP API** (Express)
 - Endpoints actuels:
 - `GET /api/health`
+
+
+
+
+# D1: 13.02.26 (1h30~)
+(22:32 - 00:07~) workspace (architecture), debut page (visuel), plannification rapide.
+
+
+# D2: 29.03.26 (40min | 14h58>)
 
 

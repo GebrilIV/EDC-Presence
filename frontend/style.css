@@ -154,6 +154,8 @@ a { color: inherit; }
 
 .spacer { height: 10px; }
 
+.mt-10 { margin-top: 10px; }
+
 .todo {
   margin-top: 10px;
   padding: 12px;

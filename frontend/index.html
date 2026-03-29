@@ -33,12 +33,21 @@
 							Info
 						</button>
 						<button
+							v-if="!state.user"
 							type="button"
 							class="tab"
 							:class="{ active: state.currentTab === 'compte' }"
 							@click="setTab('compte')"
 						>
 							Compte
+						</button>
+						<button
+							v-else
+							type="button"
+							class="tab"
+							@click="goPanel"
+						>
+							Panel
 						</button>
 					</nav>
 				</div>
@@ -70,31 +79,48 @@
 				<!-- PAGE: COMPTE -->
 				<section v-else class="card">
 					<h1 class="page-title">Compte</h1>
-					<p class="page-subtitle">Inscription (prototype)</p>
+					<p class="page-subtitle">Création et connexion (prototype)</p>
 					<hr />
+					<div class="badge" v-if="state.user">
+						Connecté: {{ state.user.prenom }} {{ state.user.nom }} — {{ state.user.role }}
+					</div>
+					<div class="badge" v-else>
+						Non connecté
+					</div>
+					<div class="spacer"></div>
 					<form class="form" @submit.prevent>
 						<div class="row">
 							<div class="field">
 								<label>Nom</label>
-								<input type="text" autocomplete="family-name" placeholder="Nom" />
+								<input v-model="state.form.nom" type="text" autocomplete="family-name" placeholder="Nom" />
 							</div>
 							<div class="field">
 								<label>Prénom</label>
-								<input type="text" autocomplete="given-name" placeholder="Prénom" />
+								<input v-model="state.form.prenom" type="text" autocomplete="given-name" placeholder="Prénom" />
 							</div>
 						</div>
 						<div class="row">
 							<div class="field">
 								<label>Email</label>
-								<input type="email" autocomplete="email" placeholder="prenom.nom@edu.vs.ch" />
+								<input v-model="state.form.email" type="email" autocomplete="email" placeholder="prenom.nom@edu.vs.ch" />
 							</div>
 						</div>
-						<div class="row" style="margin-top: 10px;">
-							<button type="submit" class="btn primary">Créer</button>
-                            <button type="submit" class="btn primary">Se connecter</button>
+						<div class="row">
+							<div class="field">
+								<label>Mot de passe</label>
+								<input v-model="state.form.password" type="password" autocomplete="current-password" placeholder="Mot de passe" />
+							</div>
 						</div>
-						<div class="small" style="margin-top: 10px;">
-							
+						<div class="row mt-10">
+							<button type="button" class="btn primary" :disabled="state.busy" @click="createAccount">Créer</button>
+							<button type="button" class="btn secondary" :disabled="state.busy" @click="login">Se connecter</button>
+							<button type="button" class="btn" :disabled="state.busy || !state.user" @click="logout">Se déconnecter</button>
+						</div>
+						<div class="small mt-10">
+							API: {{ state.apiBase || '(même origine)' }}
+						</div>
+						<div v-if="state.msg" class="msg" :class="state.msgType" role="status">
+							{{ state.msg }}
 						</div>
 					</form>
 				</section>
