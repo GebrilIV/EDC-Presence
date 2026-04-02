@@ -36,6 +36,7 @@ function edc_pdo(): PDO {
   );
   $pdo->exec("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)");
   $pdo->exec("CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_users_folder ON users(folder_name)");
 
   return $pdo;
 }
@@ -121,6 +122,17 @@ function edc_find_user(string $id): ?array {
   $pdo = edc_pdo();
   $stmt = $pdo->prepare('SELECT id, nom, prenom, email, role, created_at, folder_name FROM users WHERE id = :id LIMIT 1');
   $stmt->execute([':id' => $id]);
+  $row = $stmt->fetch();
+  return is_array($row) ? $row : null;
+}
+
+function edc_find_user_by_folder(string $folderName): ?array {
+  if ($folderName === '' || str_contains($folderName, '..') || str_contains($folderName, '/') || str_contains($folderName, '\\')) {
+    return null;
+  }
+  $pdo = edc_pdo();
+  $stmt = $pdo->prepare('SELECT id, nom, prenom, email, role, created_at, folder_name FROM users WHERE folder_name = :f LIMIT 1');
+  $stmt->execute([':f' => $folderName]);
   $row = $stmt->fetch();
   return is_array($row) ? $row : null;
 }
@@ -223,4 +235,66 @@ function edc_delete_user(string $id, string $folderName): void {
     $userDir = edc_users_dir() . '/' . $folderName;
     edc_rrmdir($userDir);
   }
+}
+
+function edc_presence_db_path(string $folderName): string {
+  return edc_users_dir() . '/' . $folderName . '/presence.db';
+}
+
+function edc_presence_has_db(string $folderName): bool {
+  $p = edc_presence_db_path($folderName);
+  return is_file($p) && filesize($p) > 0;
+}
+
+function edc_fetch_presences(string $folderName, int $limit = 300): array {
+  if ($folderName === '' || str_contains($folderName, '..') || str_contains($folderName, '/') || str_contains($folderName, '\\')) return [];
+  $dbPath = edc_presence_db_path($folderName);
+  if (!is_file($dbPath) || filesize($dbPath) === 0) return [];
+  $pdo = new PDO('sqlite:' . $dbPath, null, null, [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+  ]);
+  $pdo->exec('PRAGMA busy_timeout = 5000');
+  $pdo->exec(
+    'CREATE TABLE IF NOT EXISTS presences (' .
+    'id INTEGER PRIMARY KEY AUTOINCREMENT,' .
+    'captured_at TEXT NOT NULL,' .
+    'user_id TEXT,' .
+    'nom TEXT,' .
+    'prenom TEXT,' .
+    'lat REAL NOT NULL,' .
+    'lng REAL NOT NULL,' .
+    'accuracy REAL,' .
+    'note TEXT,' .
+    'photo_path TEXT NOT NULL,' .
+    'loc_path TEXT NOT NULL' .
+    ')'
+  );
+  $limit = max(1, min(2000, $limit));
+  $stmt = $pdo->prepare('SELECT * FROM presences ORDER BY captured_at DESC, id DESC LIMIT :lim');
+  $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+  $stmt->execute();
+  return $stmt->fetchAll() ?: [];
+}
+
+function edc_find_presence(string $folderName, int $presenceId): ?array {
+  if ($presenceId <= 0) return null;
+  if ($folderName === '' || str_contains($folderName, '..') || str_contains($folderName, '/') || str_contains($folderName, '\\')) return null;
+  $dbPath = edc_presence_db_path($folderName);
+  if (!is_file($dbPath) || filesize($dbPath) === 0) return null;
+  $pdo = new PDO('sqlite:' . $dbPath, null, null, [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+  ]);
+  $pdo->exec('PRAGMA busy_timeout = 5000');
+  $stmt = $pdo->prepare('SELECT * FROM presences WHERE id = :id');
+  $stmt->execute([':id' => $presenceId]);
+  $row = $stmt->fetch();
+  return is_array($row) ? $row : null;
+}
+
+function edc_latest_presence(string $folderName): ?array {
+  $rows = edc_fetch_presences($folderName, 1);
+  if (count($rows) === 0) return null;
+  return $rows[0];
 }

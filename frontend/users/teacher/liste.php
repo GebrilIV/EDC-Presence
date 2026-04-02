@@ -53,18 +53,57 @@ $students = edc_fetch_students($order);
             $prenom = (string)($s['prenom'] ?? '');
             $email = (string)($s['email'] ?? '');
             $ping = (string)($s['last_ping_text'] ?? '—');
+            $folder = (string)($s['folder_name'] ?? '');
+            $latest = null;
+            $latestId = 0;
+            if ($folder !== '') {
+              $latest = edc_latest_presence($folder);
+              $latestId = (int)(is_array($latest) ? ($latest['id'] ?? 0) : 0);
+            }
+            $initials = '';
+            if (preg_match('/^\p{L}/u', $prenom, $m1)) $initials .= $m1[0];
+            if (preg_match('/^\p{L}/u', $nom, $m2)) $initials .= $m2[0];
+            $hasImg = false;
+            $imgUrl = '';
+            if ($folder !== '' && !str_contains($folder, '..') && !str_contains($folder, '/') && !str_contains($folder, '\\')) {
+              $imgFs = edc_users_dir() . '/' . $folder . '/profil.png';
+              if (is_file($imgFs) && filesize($imgFs) > 0) {
+                $hasImg = true;
+                $v = (int)@filemtime($imgFs);
+                $imgUrl = '/storage/accounts/11co2/users/' . rawurlencode($folder) . '/profil.png?v=' . $v;
+              }
+            }
           ?>
             <div class="todo" style="display: grid; gap: 8px;">
               <div class="row" style="justify-content: space-between; align-items: baseline;">
-                <div>
-                  <div style="font-weight: 650; color: var(--text);">
-                    <?= h($prenom) ?> <?= h($nom) ?>
+                <div class="row" style="gap: 12px; align-items: center;">
+                  <?php if ($hasImg): ?>
+                    <img src="<?= h($imgUrl) ?>" alt="Profil" style="width: 44px; height: 44px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border);" />
+                  <?php else: ?>
+                    <div style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--border); background: rgba(0,0,0,0.18); display: grid; place-items: center; color: var(--muted); font-size: 12px;">
+                      <?= h($initials !== '' ? $initials : '—') ?>
+                    </div>
+                  <?php endif; ?>
+                  <div>
+                    <div style="font-weight: 650; color: var(--text);">
+                      <?= h($prenom) ?> <?= h($nom) ?>
+                    </div>
+                    <div class="small"><?= h($email) ?></div>
                   </div>
-                  <div class="small"><?= h($email) ?></div>
                 </div>
                 <a class="btn secondary" href="./user.php?id=<?= rawurlencode($id) ?>">En savoir plus</a>
               </div>
-              <div class="small">Dernier ping à <b><?= h($ping) ?></b></div>
+              <div class="row" style="justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <div class="small">Dernier ping à <b><?= h($ping) ?></b></div>
+                <div class="row" style="gap: 8px;">
+                  <a class="btn" href="./presences.php?u=<?= rawurlencode($folder) ?>">Historique</a>
+                  <?php if ($latestId > 0): ?>
+                    <a class="btn secondary" href="./presence.php?u=<?= rawurlencode($folder) ?>&id=<?= (int)$latestId ?>">Détail</a>
+                  <?php else: ?>
+                    <span class="btn secondary" style="opacity: 0.55; pointer-events: none;">Détail</span>
+                  <?php endif; ?>
+                </div>
+              </div>
             </div>
           <?php endforeach; ?>
         </div>

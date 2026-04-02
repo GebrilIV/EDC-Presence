@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+// Switzerland timezone (covers all pages including this file)
+@date_default_timezone_set('Europe/Zurich');
+@ini_set('date.timezone', 'Europe/Zurich');
+
 function edc_require_auth(array $allowedRoles): array {
   if (session_status() !== PHP_SESSION_ACTIVE) {
     session_set_cookie_params([

@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_bootstrap.php';
+
 // EDC-26 — création de compte (prototype)
 // POST JSON ou form-data -> crée dossiers + DBs, et enregistre l'utilisateur.
 
@@ -12,7 +14,7 @@ if ($origin !== '') {
 } else {
   header('Access-Control-Allow-Origin: *');
 }
-header('Access-Control-Allow-Credentials: true');
+  header('Access-Control-Allow-Credentials: true');
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
@@ -163,8 +165,10 @@ if (count($allowedDomains) > 0) {
   }
 }
 
+$rootDir = realpath(__DIR__ . '/..') ?: (__DIR__ . '/..');
+
 // Config chemins
-$accountRoot = __DIR__ . '/storage/accounts/11co2';
+$accountRoot = $rootDir . '/storage/accounts/11co2';
 $usersDir = $accountRoot . '/users';
 $globalDbPath = $accountRoot . '/users.db';
 

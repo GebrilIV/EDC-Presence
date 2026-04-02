@@ -29,7 +29,7 @@ ALLOWED_EMAIL_DOMAINS="ecole.fr;lycee.fr" npm run dev
 
 La géolocalisation peut être bloquée si tu ouvres `frontend/index.html` en `file://`.
 
-⚠️ Important: le système de comptes + panel utilise des endpoints **PHP** (`create_account.php`, `login.php`, pages `frontend/users/.../*.php`).
+⚠️ Important: le système de comptes + panel utilise des endpoints **PHP** (dans `php/` : `php/create_account.php`, `php/login.php`, etc + pages `frontend/users/.../*.php`).
 Donc il faut servir le projet via **PHP** (sinon `python -m http.server` ne pourra pas exécuter les `.php`).
 
 Option simple:
@@ -62,6 +62,22 @@ Puis ouvre `http://localhost:5173/frontend/`.
 (22:32 - 00:07~) workspace (architecture), debut page (visuel), plannification rapide.
 
 
-# D2: 29.03.26 (40min | 14h58>)
+# D2: 29.03.26 (40min | 14h58>16h30 | 16h43> 17h40 | 20h>)
+compte (dossier compte, panel compte, modification du compte, ..)
+debut systeme presence
 
+
+a faire: finalisé css, affichage, fiable, teste
+
+
+
+'ok bien,
+on va faire des verification. (que verifier on patch apres)
+1) verifie que on puisse pas crée deux compte avec meme prenom et nom (prenom et nom car ya des personne avec deux fois meme prenom mais pas le nom).
+
+2) question: quand on envoie un ping (presence) pourquoi ces autant long (plusieur seconde genre 20s) comment modifier ca?
+
+3) ces possible de depuis le panel admin modifier le role d'un student pour le mettre teacher ou admin (car je voudrais bien) une option en plus.
+
+4)'
 

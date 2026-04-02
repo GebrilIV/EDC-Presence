@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_bootstrap.php';
+
 // EDC-26 — connexion (prototype)
 // POST JSON ou form-data -> vérifie email+password dans SQLite et renvoie userId + infos.
 
@@ -12,7 +14,7 @@ if ($origin !== '') {
 } else {
   header('Access-Control-Allow-Origin: *');
 }
-header('Access-Control-Allow-Credentials: true');
+  header('Access-Control-Allow-Credentials: true');
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
@@ -88,7 +90,8 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
   respond(400, ['ok' => false, 'error' => 'invalid_email']);
 }
 
-$globalDbPath = __DIR__ . '/storage/accounts/11co2/users.db';
+$rootDir = realpath(__DIR__ . '/..') ?: (__DIR__ . '/..');
+$globalDbPath = $rootDir . '/storage/accounts/11co2/users.db';
 if (!is_file($globalDbPath) || filesize($globalDbPath) === 0) {
   respond(404, ['ok' => false, 'error' => 'no_users_db']);
 }

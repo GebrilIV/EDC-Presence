@@ -107,7 +107,7 @@ $lastPing = edc_last_ping_text($folderName);
   async function changeEmail() {
     setMsg('', '');
     const newEmail = document.getElementById('newEmail').value;
-    const { ok, status, data } = await postJson('/change_email.php', { newEmail });
+    const { ok, status, data } = await postJson('/php/change_email.php', { newEmail });
     if (!ok) return setMsg('err', 'Erreur: ' + (data?.error || ('HTTP ' + status)));
     setMsg('ok', 'Email mis à jour.');
   }
@@ -115,14 +115,14 @@ $lastPing = edc_last_ping_text($folderName);
   async function changePassword() {
     setMsg('', '');
     const newPassword = document.getElementById('newPassword').value;
-    const { ok, status, data } = await postJson('/change_password.php', { newPassword });
+    const { ok, status, data } = await postJson('/php/change_password.php', { newPassword });
     if (!ok) return setMsg('err', 'Erreur: ' + (data?.error || ('HTTP ' + status)));
     setMsg('ok', 'Mot de passe mis à jour.');
   }
 
   async function doLogout() {
     setMsg('', '');
-    const { ok, status, data } = await postJson('/logout.php', {});
+    const { ok, status, data } = await postJson('/php/logout.php', {});
     if (!ok) return setMsg('err', 'Erreur: ' + (data?.error || ('HTTP ' + status)));
     try { localStorage.removeItem('edc.user'); } catch {}
     window.location.href = '/frontend/';
@@ -131,7 +131,7 @@ $lastPing = edc_last_ping_text($folderName);
   async function deleteAccount() {
     if (!confirm('Supprimer le compte définitivement ?')) return;
     setMsg('', '');
-    const { ok, status, data } = await postJson('/delete_account.php', {});
+    const { ok, status, data } = await postJson('/php/delete_account.php', {});
     if (!ok) return setMsg('err', 'Erreur: ' + (data?.error || ('HTTP ' + status)));
     try { localStorage.removeItem('edc.user'); } catch {}
     window.location.href = '/frontend/';

@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_bootstrap.php';
+
 // EDC-26 — delete account (requires session)
 
 $origin = (string)($_SERVER['HTTP_ORIGIN'] ?? '');
@@ -10,7 +12,7 @@ if ($origin !== '') {
 } else {
   header('Access-Control-Allow-Origin: *');
 }
-header('Access-Control-Allow-Credentials: true');
+  header('Access-Control-Allow-Credentials: true');
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
@@ -71,11 +73,9 @@ if (!is_array($user) || !isset($user['id'], $user['folderName'], $user['role']))
   respond(401, ['ok' => false, 'error' => 'not_authenticated']);
 }
 
-// Par défaut: un utilisateur peut supprimer son propre compte.
-// (Si vous voulez restreindre aux students uniquement, on pourra le faire.)
-
-$dbPath = __DIR__ . '/storage/accounts/11co2/users.db';
-$usersDir = __DIR__ . '/storage/accounts/11co2/users';
+$rootDir = realpath(__DIR__ . '/..') ?: (__DIR__ . '/..');
+$dbPath = $rootDir . '/storage/accounts/11co2/users.db';
+$usersDir = $rootDir . '/storage/accounts/11co2/users';
 
 if (!is_file($dbPath) || filesize($dbPath) === 0) {
   respond(500, ['ok' => false, 'error' => 'users_db_missing']);

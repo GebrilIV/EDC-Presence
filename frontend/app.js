@@ -29,7 +29,7 @@ createApp({
 
     function endpointUrl(relativePath) {
       // Default: endpoints live at project root, while frontend is in /frontend
-      // -> use ../create_account.php when served from /frontend
+      // -> use ../php/create_account.php when served from /frontend
       const base = state.apiBase?.trim();
       if (base) {
         const cleaned = relativePath.replace(/^\.\.\//, '').replace(/^\/+/, '');
@@ -83,7 +83,7 @@ createApp({
 
     async function refreshSession() {
       try {
-        const url = endpointUrl('../me.php');
+        const url = endpointUrl('../php/me.php');
         const res = await fetch(url, { method: 'GET', credentials: 'include' });
         const data = await res.json().catch(() => null);
         if (res.ok && data?.authenticated && data?.user) {
@@ -117,6 +117,10 @@ createApp({
       else window.location.href = './users/student/index.php';
     }
 
+    function goPresence() {
+      window.location.href = './presence/presence.php';
+    }
+
     async function createAccount() {
       clearMessage();
       state.busy = true;
@@ -129,7 +133,7 @@ createApp({
           role: 'student',
         };
 
-        const url = endpointUrl('../create_account.php');
+        const url = endpointUrl('../php/create_account.php');
         const { ok, status, data } = await postJson(url, payload);
 
         if (!ok) {
@@ -173,7 +177,7 @@ createApp({
           password: state.form.password,
         };
 
-        const url = endpointUrl('../login.php');
+        const url = endpointUrl('../php/login.php');
         const { ok, status, data } = await postJson(url, payload);
 
         if (!ok) {
@@ -209,7 +213,7 @@ createApp({
     async function logout() {
       state.busy = true;
       try {
-        await postJson(endpointUrl('../logout.php'), {});
+        await postJson(endpointUrl('../php/logout.php'), {});
       } catch {
         // ignore
       } finally {
@@ -243,6 +247,7 @@ createApp({
       login,
       logout,
       goPanel,
+      goPresence,
     };
   },
 }).mount('#app');

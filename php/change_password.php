@@ -1,7 +1,9 @@
 <?php
 declare(strict_types=1);
 
-// EDC-26 — change email (requires session)
+require_once __DIR__ . '/_bootstrap.php';
+
+// EDC-26 — change password (requires session)
 
 $origin = (string)($_SERVER['HTTP_ORIGIN'] ?? '');
 if ($origin !== '') {
@@ -10,7 +12,7 @@ if ($origin !== '') {
 } else {
   header('Access-Control-Allow-Origin: *');
 }
-header('Access-Control-Allow-Credentials: true');
+  header('Access-Control-Allow-Credentials: true');
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
@@ -42,25 +44,6 @@ function read_input(): array {
   return is_array($_POST) ? $_POST : [];
 }
 
-function normalize_whitespace(string $s): string {
-  $s = trim($s);
-  $s = preg_replace('/\s+/u', ' ', $s);
-  return $s ?? '';
-}
-
-function parse_allowed_domains(): array {
-  $raw = (string)(getenv('ALLOWED_EMAIL_DOMAINS') ?: '');
-  $parts = preg_split('/[;,\s]+/', strtolower($raw));
-  $parts = array_values(array_filter(array_map('trim', $parts ?: []), fn($v) => $v !== ''));
-  return $parts;
-}
-
-function email_domain(string $email): string {
-  $pos = strrpos($email, '@');
-  if ($pos === false) return '';
-  return strtolower(substr($email, $pos + 1));
-}
-
 function pdo_sqlite(string $path): PDO {
   $pdo = new PDO('sqlite:' . $path, null, null, [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -85,44 +68,33 @@ if (!is_array($user) || !isset($user['id'], $user['email'])) {
 }
 
 $input = read_input();
-$newEmail = normalize_whitespace((string)($input['newEmail'] ?? $input['new_email'] ?? $input['email'] ?? ''));
+$newPassword = (string)($input['newPassword'] ?? $input['new_password'] ?? $input['password'] ?? '');
 
-if ($newEmail === '') {
-  respond(400, ['ok' => false, 'error' => 'missing_fields', 'required' => ['newEmail']]);
+if (trim($newPassword) === '') {
+  respond(400, ['ok' => false, 'error' => 'missing_fields', 'required' => ['newPassword']]);
 }
 
-if (!filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
-  respond(400, ['ok' => false, 'error' => 'invalid_email']);
+if (strlen($newPassword) < 6) {
+  respond(400, ['ok' => false, 'error' => 'password_too_short', 'minLength' => 6]);
 }
 
-$allowedDomains = parse_allowed_domains();
-if (count($allowedDomains) > 0) {
-  $domain = email_domain($newEmail);
-  if ($domain === '' || !in_array($domain, $allowedDomains, true)) {
-    respond(403, ['ok' => false, 'error' => 'email_domain_not_allowed', 'allowedDomains' => $allowedDomains]);
-  }
+$hash = password_hash($newPassword, PASSWORD_DEFAULT);
+if (!is_string($hash) || $hash === '') {
+  respond(500, ['ok' => false, 'error' => 'password_hash_failed']);
 }
 
-$dbPath = __DIR__ . '/storage/accounts/11co2/users.db';
+$rootDir = realpath(__DIR__ . '/..') ?: (__DIR__ . '/..');
+$dbPath = $rootDir . '/storage/accounts/11co2/users.db';
 if (!is_file($dbPath) || filesize($dbPath) === 0) {
   respond(500, ['ok' => false, 'error' => 'users_db_missing']);
 }
 
 try {
   $pdo = pdo_sqlite($dbPath);
+  $stmt = $pdo->prepare('UPDATE users SET password_hash = :hash WHERE id = :id');
+  $stmt->execute([':hash' => $hash, ':id' => $user['id']]);
 
-  $stmtDup = $pdo->prepare('SELECT 1 FROM users WHERE email = :email LIMIT 1');
-  $stmtDup->execute([':email' => $newEmail]);
-  if ($stmtDup->fetchColumn()) {
-    respond(409, ['ok' => false, 'error' => 'email_already_exists']);
-  }
-
-  $stmt = $pdo->prepare('UPDATE users SET email = :email WHERE id = :id');
-  $stmt->execute([':email' => $newEmail, ':id' => $user['id']]);
-
-  $_SESSION['user']['email'] = $newEmail;
-
-  respond(200, ['ok' => true, 'email' => $newEmail]);
+  respond(200, ['ok' => true]);
 } catch (Throwable $e) {
   respond(500, ['ok' => false, 'error' => 'server_error', 'message' => $e->getMessage()]);
 }
