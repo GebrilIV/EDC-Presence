@@ -1,0 +1,14 @@
+{
+    "userId": "e09fd290c979eaa39dff7a40c8ac53bc",
+    "nom": "admin",
+    "prenom": "admin",
+    "email": "admin@edu.vs.ch",
+    "role": "admin",
+    "createdAt": "2026-04-16T11:26:04+00:00",
+    "paths": {
+        "pics": "pics\/",
+        "loc": "loc\/",
+        "acc": "acc\/",
+        "accDb": "acc\/account.db"
+    }
+}

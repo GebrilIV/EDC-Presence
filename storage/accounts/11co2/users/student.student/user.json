@@ -1,0 +1,14 @@
+{
+    "userId": "bf62a70b2125b02d9b98f22f929465c3",
+    "nom": "student",
+    "prenom": "student",
+    "email": "student@edu.vs.ch",
+    "role": "student",
+    "createdAt": "2026-04-16T11:26:04+00:00",
+    "paths": {
+        "pics": "pics\/",
+        "loc": "loc\/",
+        "acc": "acc\/",
+        "accDb": "acc\/account.db"
+    }
+}

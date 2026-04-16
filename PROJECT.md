@@ -81,3 +81,17 @@ on va faire des verification. (que verifier on patch apres)
 
 4)'
 
+
+
+student@edu.vs.ch
+
+rôle : student
+mot de passe : 1234
+teacher@edu.vs.ch
+
+rôle : teacher
+mot de passe : 1234
+admin@edu.vs.ch
+
+rôle : admin
+mot de passe : 1234

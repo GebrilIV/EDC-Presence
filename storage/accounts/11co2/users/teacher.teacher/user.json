@@ -1,0 +1,14 @@
+{
+    "userId": "0cc943fe07e89d7a423e6044357015c7",
+    "nom": "teacher",
+    "prenom": "teacher",
+    "email": "teacher@edu.vs.ch",
+    "role": "teacher",
+    "createdAt": "2026-04-16T11:26:04+00:00",
+    "paths": {
+        "pics": "pics\/",
+        "loc": "loc\/",
+        "acc": "acc\/",
+        "accDb": "acc\/account.db"
+    }
+}
