@@ -59,6 +59,7 @@ function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8')
 					<thead>
 						<tr>
 							<th>Date</th>
+							<th>Localisation</th>
 							<th>Précision</th>
 							<th>Note</th>
 							<th></th>
@@ -70,6 +71,9 @@ function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8')
 								<td>
 									<div><?= h((string)($r['captured_at'] ?? '')) ?></div>
 									<div class="small">ID #<?= (int)($r['id'] ?? 0) ?></div>
+								</td>
+								<td>
+									<?= !empty($r['location_missing']) ? 'Absente' : 'Présente' ?>
 								</td>
 								<td>
 									<?= ($r['accuracy'] !== null && $r['accuracy'] !== '') ? h((string)$r['accuracy']) . ' m' : '—' ?>

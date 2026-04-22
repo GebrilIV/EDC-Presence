@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Accueil</title>
+
+    <script>
+        function goToFrontend() {
+            window.location.href = "frontend/index.html";
+        }
+    </script>
+
+    <script>
+        setTimeout(() => {
+            window.location.href = "frontend/index.html";
+        }, 100); // pas baucoup de secondes
+    </script>
+</head>
+<body>
+
+    <h1>GoToFrontend</h1>
+
+    <!-- Bouton avec href -->
+    <a href="frontend/index.html">
+        <button>Aller vers le frontend (href)</button>
+    </a>
+
+    <br><br>
+
+    <!-- Bouton avec JS -->
+    <button onclick="goToFrontend()">
+        Aller vers le frontend (JS)
+    </button>
+
+</body>
+</html>

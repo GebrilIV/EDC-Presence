@@ -42,7 +42,7 @@ function edc_pdo(): PDO {
 }
 
 function edc_last_ping_ts(string $folderName): ?int {
-  // Prototype: on considère que le dernier ping = dernier fichier dans loc/ (mtime)
+  // Dernière présence estimée par le dernier fichier dans loc/ (mtime).
   // Si pas de fichier, retourne null.
   if ($folderName === '' || str_contains($folderName, '..') || str_contains($folderName, '/') || str_contains($folderName, '\\')) {
     return null;
@@ -241,6 +241,37 @@ function edc_presence_db_path(string $folderName): string {
   return edc_users_dir() . '/' . $folderName . '/presence.db';
 }
 
+function edc_ensure_presence_table(PDO $pdo): void {
+  $pdo->exec(
+    'CREATE TABLE IF NOT EXISTS presences (' .
+    'id INTEGER PRIMARY KEY AUTOINCREMENT,' .
+    'captured_at TEXT NOT NULL,' .
+    'user_id TEXT,' .
+    'nom TEXT,' .
+    'prenom TEXT,' .
+    'lat REAL NOT NULL,' .
+    'lng REAL NOT NULL,' .
+    'accuracy REAL,' .
+    'note TEXT,' .
+    'photo_path TEXT NOT NULL,' .
+    'loc_path TEXT NOT NULL,' .
+    'location_missing INTEGER NOT NULL DEFAULT 0' .
+    ')'
+  );
+  $stmt = $pdo->query("PRAGMA table_info(presences)");
+  $columns = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+  $hasLocationMissing = false;
+  foreach ($columns as $column) {
+    if (is_array($column) && isset($column['name']) && $column['name'] === 'location_missing') {
+      $hasLocationMissing = true;
+      break;
+    }
+  }
+  if (!$hasLocationMissing) {
+    $pdo->exec('ALTER TABLE presences ADD COLUMN location_missing INTEGER NOT NULL DEFAULT 0');
+  }
+}
+
 function edc_presence_has_db(string $folderName): bool {
   $p = edc_presence_db_path($folderName);
   return is_file($p) && filesize($p) > 0;
@@ -255,21 +286,7 @@ function edc_fetch_presences(string $folderName, int $limit = 300): array {
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
   ]);
   $pdo->exec('PRAGMA busy_timeout = 5000');
-  $pdo->exec(
-    'CREATE TABLE IF NOT EXISTS presences (' .
-    'id INTEGER PRIMARY KEY AUTOINCREMENT,' .
-    'captured_at TEXT NOT NULL,' .
-    'user_id TEXT,' .
-    'nom TEXT,' .
-    'prenom TEXT,' .
-    'lat REAL NOT NULL,' .
-    'lng REAL NOT NULL,' .
-    'accuracy REAL,' .
-    'note TEXT,' .
-    'photo_path TEXT NOT NULL,' .
-    'loc_path TEXT NOT NULL' .
-    ')'
-  );
+  edc_ensure_presence_table($pdo);
   $limit = max(1, min(2000, $limit));
   $stmt = $pdo->prepare('SELECT * FROM presences ORDER BY captured_at DESC, id DESC LIMIT :lim');
   $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
@@ -287,6 +304,7 @@ function edc_find_presence(string $folderName, int $presenceId): ?array {
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
   ]);
   $pdo->exec('PRAGMA busy_timeout = 5000');
+  edc_ensure_presence_table($pdo);
   $stmt = $pdo->prepare('SELECT * FROM presences WHERE id = :id');
   $stmt->execute([':id' => $presenceId]);
   $row = $stmt->fetch();

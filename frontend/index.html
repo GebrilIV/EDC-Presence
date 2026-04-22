@@ -67,7 +67,7 @@
 				<!-- PAGE: INFO -->
 				<section v-else-if="state.currentTab === 'info'" class="card">
 					<h1 class="page-title">Infos</h1>
-					<p class="page-subtitle">À compléter (consignes, horaires, contacts)</p>
+					<p class="page-subtitle">Infos Déroulement</p>
 					<hr />
 					<h2 class="big-title">Déroulement</h2>
 					<div class="placeholder">(à remplir plus tard)</div>
@@ -79,7 +79,7 @@
 				<!-- PAGE: COMPTE -->
 				<section v-else class="card">
 					<h1 class="page-title">Compte</h1>
-					<p class="page-subtitle">Création et connexion (prototype)</p>
+					<p class="page-subtitle">Création et connexion</p>
 					<hr />
 					<div class="badge" v-if="state.user">
 						Connecté: {{ state.user.prenom }} {{ state.user.nom }} — {{ state.user.role }}

@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
-// EDC-26 — création de compte (prototype)
-// POST JSON ou form-data -> crée dossiers + DBs, et enregistre l'utilisateur.
+// EDC-26 — création de compte
+// POST JSON ou form-data -> crée dossiers, base SQLite et enregistre l’utilisateur.
 
-// CORS (prototype): support same-origin + optional cross-origin with credentials
+// CORS : support same-origin et gestion de l’origine avec credentials
 $origin = (string)($_SERVER['HTTP_ORIGIN'] ?? '');
 if ($origin !== '') {
   header('Access-Control-Allow-Origin: ' . $origin);
@@ -35,7 +35,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
   exit;
 }
 
-// Session (prototype)
+// Session utilisateur
 if (session_status() !== PHP_SESSION_ACTIVE) {
   session_set_cookie_params([
     'httponly' => true,

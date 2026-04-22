@@ -47,7 +47,7 @@ Puis ouvre `http://localhost:5173/frontend/`.
 - **Geolocation API**: `navigator.geolocation.getCurrentPosition()`
 - **File / Media capture** (mobile): `<input type="file" accept="image/*" capture>`
 - **Fetch API**: `fetch()` + `FormData` (envoi multipart photo + champs)
-- **Storage**: `localStorage` (prototype, pour mémoriser `userId`)
+- **Storage**: `localStorage` (mémoire de session pour l’utilisateur)
 
 ### Côté serveur (backend)
 
@@ -58,7 +58,7 @@ Puis ouvre `http://localhost:5173/frontend/`.
 
 
 
-# D1: 13.02.26 (1h30~)
+# D1: 13.02.26 (2h00~)
 (22:32 - 00:07~) workspace (architecture), debut page (visuel), plannification rapide.
 
 
@@ -67,19 +67,14 @@ compte (dossier compte, panel compte, modification du compte, ..)
 debut systeme presence
 
 
-a faire: finalisé css, affichage, fiable, teste
+# D3: 22.04.26 (1h45~)
+correction, finalisation, relecture, flexibilité
 
 
 
-'ok bien,
-on va faire des verification. (que verifier on patch apres)
-1) verifie que on puisse pas crée deux compte avec meme prenom et nom (prenom et nom car ya des personne avec deux fois meme prenom mais pas le nom).
 
-2) question: quand on envoie un ping (presence) pourquoi ces autant long (plusieur seconde genre 20s) comment modifier ca?
+À faire : finaliser le CSS et l’affichage.
 
-3) ces possible de depuis le panel admin modifier le role d'un student pour le mettre teacher ou admin (car je voudrais bien) une option en plus.
-
-4)'
 
 
 

@@ -113,18 +113,30 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 			$note = substr($note, 0, 500);
 		}
 
+		$noGeo = ((string)($_POST['no_geo'] ?? '') === '1');
 		$lat = (string)($_POST['lat'] ?? '');
 		$lng = (string)($_POST['lng'] ?? '');
 		$accuracy = (string)($_POST['accuracy'] ?? '');
-		if ($lat === '' || $lng === '') {
-			throw new RuntimeException('Localisation manquante (autorisez la localisation précise).');
-		}
 
-		$latF = (float)$lat;
-		$lngF = (float)$lng;
-		$accF = $accuracy !== '' ? (float)$accuracy : null;
-		if (!is_finite($latF) || !is_finite($lngF) || $latF < -90 || $latF > 90 || $lngF < -180 || $lngF > 180) {
-			throw new RuntimeException('Localisation invalide.');
+		if ($noGeo) {
+			if ($note === '') {
+				$note = 'Pas de géolocalisation fournie.';
+			}
+			$latF = 0.0;
+			$lngF = 0.0;
+			$accF = null;
+			$locRel = '';
+		} else {
+			if ($lat === '' || $lng === '') {
+				throw new RuntimeException('Localisation manquante (autorisez la localisation précise).');
+			}
+
+			$latF = (float)$lat;
+			$lngF = (float)$lng;
+			$accF = $accuracy !== '' ? (float)$accuracy : null;
+			if (!is_finite($latF) || !is_finite($lngF) || $latF < -90 || $latF > 90 || $lngF < -180 || $lngF > 180) {
+				throw new RuntimeException('Localisation invalide.');
+			}
 		}
 
 		if (!isset($_FILES['photo'])) {
@@ -252,27 +264,30 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 		@chmod($photoFs, 0644);
 
 		// GeoJSON
-		$geo = [
-			'type' => 'Feature',
-			'geometry' => [
-				'type' => 'Point',
-				'coordinates' => [$lngF, $latF],
-			],
-			'properties' => [
-				'accuracy_m' => $accF,
-				'captured_at' => $capturedAt,
-				'user_id' => $userId,
-				'nom' => $nom,
-				'prenom' => $prenom,
-			],
-		];
-		$locRel = 'loc/' . $stamp . '.geojson';
-		$locFs = $userDir . '/' . $locRel;
-		$geoJson = json_encode($geo, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-		if (!is_string($geoJson) || $geoJson === '' || @file_put_contents($locFs, $geoJson) === false) {
-			throw new RuntimeException('Impossible de sauvegarder la localisation.');
+		$locRel = '';
+		if (!$noGeo) {
+			$geo = [
+				'type' => 'Feature',
+				'geometry' => [
+					'type' => 'Point',
+					'coordinates' => [$lngF, $latF],
+				],
+				'properties' => [
+					'accuracy_m' => $accF,
+					'captured_at' => $capturedAt,
+					'user_id' => $userId,
+					'nom' => $nom,
+					'prenom' => $prenom,
+				],
+			];
+			$locRel = 'loc/' . $stamp . '.geojson';
+			$locFs = $userDir . '/' . $locRel;
+			$geoJson = json_encode($geo, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+			if (!is_string($geoJson) || $geoJson === '' || @file_put_contents($locFs, $geoJson) === false) {
+				throw new RuntimeException('Impossible de sauvegarder la localisation.');
+			}
+			@chmod($locFs, 0644);
 		}
-		@chmod($locFs, 0644);
 
 		// Presence DB (par utilisateur)
 		$presenceDb = $userDir . '/presence.db';
@@ -289,12 +304,24 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 			'accuracy REAL,' .
 			'note TEXT,' .
 			'photo_path TEXT NOT NULL,' .
-			'loc_path TEXT NOT NULL' .
+			'loc_path TEXT NOT NULL,' .
+			'location_missing INTEGER NOT NULL DEFAULT 0' .
 			')'
 		);
+		$columns = $pdo->query("PRAGMA table_info(presences)")->fetchAll(PDO::FETCH_ASSOC);
+		$hasLocationMissing = false;
+		foreach ($columns as $column) {
+			if (is_array($column) && isset($column['name']) && $column['name'] === 'location_missing') {
+				$hasLocationMissing = true;
+				break;
+			}
+		}
+		if (!$hasLocationMissing) {
+			$pdo->exec('ALTER TABLE presences ADD COLUMN location_missing INTEGER NOT NULL DEFAULT 0');
+		}
 		$stmt = $pdo->prepare(
-			'INSERT INTO presences (captured_at, user_id, nom, prenom, lat, lng, accuracy, note, photo_path, loc_path) ' .
-			'VALUES (:captured_at, :user_id, :nom, :prenom, :lat, :lng, :accuracy, :note, :photo_path, :loc_path)'
+			'INSERT INTO presences (captured_at, user_id, nom, prenom, lat, lng, accuracy, note, photo_path, loc_path, location_missing) ' .
+			'VALUES (:captured_at, :user_id, :nom, :prenom, :lat, :lng, :accuracy, :note, :photo_path, :loc_path, :location_missing)'
 		);
 		$stmt->execute([
 			':captured_at' => $capturedAt,
@@ -307,6 +334,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 			':note' => $note,
 			':photo_path' => $photoRel,
 			':loc_path' => $locRel,
+			':location_missing' => $noGeo ? 1 : 0,
 		]);
 
 		if ($dbg) {
@@ -382,7 +410,7 @@ if (isset($_GET['ok'])) {
 	<div class="container" style="padding-top: 18px;">
 		<div class="card">
 			<h1 class="page-title">Présence</h1>
-			<p class="page-subtitle">Envoi: heure + photo + position précise</p>
+			<p class="page-subtitle">Envoi: heure + photo + position si disponible</p>
 			<hr />
 
 			<?php if ($msg !== ''): ?>
@@ -404,8 +432,12 @@ if (isset($_GET['ok'])) {
 							<div class="hint">Autorisation localisation demandée via “Démarrer”. Photo via le bouton photo.</div>
 						</div>
 						<button id="startBtn" class="btn success" type="button">Démarrer</button>
-					</div>
-
+					</div>				<div style="display:flex; justify-content:flex-end;">
+					<label class="small" style="display:inline-flex; align-items:center; gap:8px; opacity:0.75;">
+						<input id="noGeo" type="checkbox" name="no_geo" value="1" style="width:14px; height:14px; margin:0;" />
+						<span>Pas de géolocalisation</span>
+					</label>
+				</div>
 					<div class="row" style="gap: 10px; align-items: center;">
 						<button id="pickBtn" class="btn" type="button">Choisir / Prendre une photo</button>
 						<div class="small" id="photoInfo">Aucune photo</div>
@@ -479,10 +511,15 @@ if (isset($_GET['ok'])) {
 		const latEl = document.getElementById('lat');
 		const lngEl = document.getElementById('lng');
 		const accEl = document.getElementById('accuracy');
+		const noGeoEl = document.getElementById('noGeo');
 		const noteEl = document.getElementById('note');
 		const debugEl = document.getElementById('debugLog');
 		const ajaxEl = document.getElementById('_ajax');
 		if (ajaxEl) ajaxEl.value = '1';
+		if (noGeoEl) {
+			noGeoEl.addEventListener('change', updateNoGeoDisplay);
+			updateNoGeoDisplay();
+		}
 
 		const DEBUG = new URLSearchParams(window.location.search).get('debug') === '1';
 		function log(...args) {
@@ -578,6 +615,16 @@ if (isset($_GET['ok'])) {
 			);
 		}
 
+		function updateNoGeoDisplay() {
+			if (noGeoEl && noGeoEl.checked) {
+				locInfoEl.textContent = 'Aucune géolocalisation demandée.';
+				return;
+			}
+			if (!latEl.value || !lngEl.value) {
+				locInfoEl.textContent = 'Pas de localisation';
+			}
+		}
+
 		function pickPhoto() {
 			log('pickPhoto');
 			photoInput.click();
@@ -644,6 +691,10 @@ if (isset($_GET['ok'])) {
 			startBtn.disabled = true;
 			try {
 				log('start clicked');
+				if (noGeoEl && noGeoEl.checked) {
+					locInfoEl.textContent = 'Pas de géolocalisation demandée.';
+					return;
+				}
 				// Request location permission + start watch
 				const pos = await getBestLocation();
 				setPosition(pos);
@@ -663,15 +714,24 @@ if (isset($_GET['ok'])) {
 			sendBtn.disabled = true;
 			sendBtn.textContent = 'Envoi...';
 			try {
-				// refresh location at submit time for best precision
-				const pos = await getBestLocation();
-				setPosition(pos);
+				if (!(noGeoEl && noGeoEl.checked)) {
+					// refresh location at submit time for best precision
+					const pos = await getBestLocation();
+					setPosition(pos);
+				} else {
+					log('no geolocation mode active');
+					locInfoEl.textContent = 'Pas de géolocalisation demandée.';
+				}
 			} catch (e) {
-				log('location failed', e);
-				sendBtn.disabled = false;
-				sendBtn.textContent = 'Envoyer la présence';
-				alert('Localisation requise (précise). Erreur: ' + (e?.message || e));
-				return;
+				if (noGeoEl && noGeoEl.checked) {
+					locInfoEl.textContent = 'Pas de géolocalisation demandée.';
+				} else {
+					log('location failed', e);
+					sendBtn.disabled = false;
+					sendBtn.textContent = 'Envoyer la présence';
+					alert('Localisation requise (précise). Erreur: ' + (e?.message || e));
+					return;
+				}
 			}
 
 			const hasPhoto = photoInput.files && photoInput.files.length > 0;
@@ -682,7 +742,7 @@ if (isset($_GET['ok'])) {
 				alert('Photo requise.');
 				return;
 			}
-			if (!latEl.value || !lngEl.value) {
+			if (!(noGeoEl && noGeoEl.checked) && (!latEl.value || !lngEl.value)) {
 				log('missing lat/lng');
 				sendBtn.disabled = false;
 				sendBtn.textContent = 'Envoyer la présence';
@@ -691,9 +751,15 @@ if (isset($_GET['ok'])) {
 			}
 
 			try {
+				if (noGeoEl && noGeoEl.checked) {
+					latEl.value = '';
+					lngEl.value = '';
+					accEl.value = '';
+				}
 				const fd = new FormData();
 				fd.append('csrf', formEl.querySelector('input[name="csrf"]').value);
 				fd.append('_ajax', '1');
+				fd.append('no_geo', noGeoEl && noGeoEl.checked ? '1' : '0');
 				fd.append('lat', latEl.value);
 				fd.append('lng', lngEl.value);
 				fd.append('accuracy', accEl.value || '');

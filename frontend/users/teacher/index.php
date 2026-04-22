@@ -26,7 +26,7 @@ function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8')
       </div>
 
       <div class="spacer"></div>
-      <div class="todo">Contenu teacher à venir. (Le panel bloque bien les students.)</div>
+      <div class="todo">Menu teacher : accès à la liste des élèves et aux paramètres.</div>
 
       <div id="params" class="grid" style="display: none; margin-top: 14px;">
         <section class="card">
@@ -65,7 +65,7 @@ function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8')
 
         <section class="card">
           <h2>Supprimer le compte</h2>
-          <p class="small">Action irréversible (prototype): supprime aussi le dossier utilisateur.</p>
+          <p class="small">Action irréversible : supprime aussi le dossier utilisateur.</p>
           <div class="row mt-10">
             <button class="btn" style="border-color: rgba(255,107,107,0.6);" type="button" onclick="deleteAccount()">Supprimer</button>
           </div>
