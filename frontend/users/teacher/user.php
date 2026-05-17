@@ -164,7 +164,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         <div class="k">Nom</div><div><?= h((string)($student['nom'] ?? '')) ?></div>
         <div class="k">Prénom</div><div><?= h((string)($student['prenom'] ?? '')) ?></div>
         <div class="k">Email</div><div><?= h((string)($student['email'] ?? '')) ?></div>
-        <div class="k">Créé le</div><div><?= h((string)($student['created_at'] ?? '')) ?></div>
+        <div class="k">Créé le</div><div><?= h(edc_format_datetime_string((string)($student['created_at'] ?? ''))) ?></div>
         <div class="k">Dossier</div><div><?= h($folder) ?></div>
         <div class="k">Dernier ping</div>
         <div>

@@ -259,7 +259,7 @@ if ($folder !== '' && !str_contains($folder, '..') && !str_contains($folder, '/'
 
       <div class="kv">
         <div class="k">ID</div><div><?= h((string)($student['id'] ?? '')) ?></div>
-        <div class="k">Créé le</div><div><?= h((string)($student['created_at'] ?? '')) ?></div>
+        <div class="k">Créé le</div><div><?= h(edc_format_datetime_string((string)($student['created_at'] ?? ''))) ?></div>
         <div class="k">Dossier</div><div><?= h($folder) ?></div>
       </div>
 

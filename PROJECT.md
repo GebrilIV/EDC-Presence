@@ -90,3 +90,6 @@ admin@edu.vs.ch
 
 rôle : admin
 mot de passe : 1234
+
+https://europa-co2.wstr.fr/frontend/
+

@@ -83,9 +83,7 @@ if ($locRel !== '') {
 			<h2>Détail du ping</h2>
 			<div class="kv">
 				<div class="k">Élève</div><div><?= h(($user['nom'] ?? '') . ' ' . ($user['prenom'] ?? '')) ?></div>
-				<div class="k">Date</div><div><?= h((string)($row['captured_at'] ?? '')) ?></div>
-				<div class="k">Localisation</div><div><?= $locationMissing ? 'Absente' : 'Fourni' ?></div>
-				<div class="k">Précision</div><div><?= ($row['accuracy'] !== null && $row['accuracy'] !== '') ? h((string)$row['accuracy']) . ' m' : '—' ?></div>
+			<div class="k">Date</div><div><?= h(edc_format_datetime_string((string)($row['captured_at'] ?? ''))) ?></div>
 				<div class="k">Note</div><div><?= h((string)($row['note'] ?? '')) ?></div>
 			</div>
 

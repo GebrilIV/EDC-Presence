@@ -69,7 +69,7 @@ function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8')
 						<?php foreach ($rows as $r): ?>
 							<tr>
 								<td>
-									<div><?= h((string)($r['captured_at'] ?? '')) ?></div>
+									<div><?= h(edc_format_datetime_string((string)($r['captured_at'] ?? ''))) ?></div>
 									<div class="small">ID #<?= (int)($r['id'] ?? 0) ?></div>
 								</td>
 								<td>

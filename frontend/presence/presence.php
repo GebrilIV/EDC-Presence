@@ -429,9 +429,9 @@ if (isset($_GET['ok'])) {
 					<div class="row" style="justify-content: space-between; align-items: baseline;">
 						<div>
 							<div class="small">Photo + Localisation</div>
-							<div class="hint">Autorisation localisation demandée via “Démarrer”. Photo via le bouton photo.</div>
+							<div class="hint">Autorisation localisation demandée via “LOCA*”. Photo via le bouton photo.</div>
 						</div>
-						<button id="startBtn" class="btn success" type="button">Démarrer</button>
+						<button id="startBtn" class="btn success" type="button">LOCA*</button>
 					</div>				<div style="display:flex; justify-content:flex-end;">
 					<label class="small" style="display:inline-flex; align-items:center; gap:8px; opacity:0.75;">
 						<input id="noGeo" type="checkbox" name="no_geo" value="1" style="width:14px; height:14px; margin:0;" />
@@ -531,14 +531,20 @@ if (isset($_GET['ok'])) {
 			debugEl.textContent = (debugEl.textContent === '(logs)' ? '' : debugEl.textContent + '\n') + line;
 		}
 
-		function pad2(n) { return String(n).padStart(2, '0'); }
-		function tickClock() {
-			const d = new Date();
-			clockEl.textContent = pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
-			clockSubEl.textContent = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-		}
-		tickClock();
-		setInterval(tickClock, 250);
+function tickClock() {
+		const d = new Date();
+		const options = { timeZone: 'Europe/Zurich', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
+		clockEl.textContent = d.toLocaleTimeString('fr-FR', options);
+		clockSubEl.textContent = d.toLocaleDateString('fr-FR', {
+			timeZone: 'Europe/Zurich',
+			weekday: 'long',
+			year: 'numeric',
+			month: 'long',
+			day: 'numeric'
+		});
+	}
+	tickClock();
+	setInterval(tickClock, 1000);
 
 		// Leaflet map
 		const map = L.map('map', { zoomControl: true });

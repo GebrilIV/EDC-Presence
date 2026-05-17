@@ -25,3 +25,6 @@ cd /home/gebril/Bureau/EDC-26/V1
 ```
 
 Puis ouvre `http://localhost:5173/frontend/`.
+
+
+https://europa-co2.wstr.fr/frontend/

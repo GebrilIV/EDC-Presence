@@ -41,35 +41,125 @@ function edc_pdo(): PDO {
   return $pdo;
 }
 
+function edc_date_timezone(): DateTimeZone {
+  return new DateTimeZone('Europe/Zurich');
+}
+
+function edc_parse_datetime(string $value): ?DateTimeImmutable {
+  if ($value === '') return null;
+  try {
+    return new DateTimeImmutable($value);
+  } catch (Throwable $e) {
+    return null;
+  }
+}
+
+function edc_format_datetime_ts(int $timestamp, string $format = 'd.m.Y H:i'): string {
+  $dt = (new DateTimeImmutable('@' . $timestamp))->setTimezone(edc_date_timezone());
+  return $dt->format($format);
+}
+
+function edc_format_datetime_string(string $value, string $format = 'd.m.Y H:i'): string {
+  $dt = edc_parse_datetime($value);
+  if (!$dt) return $value !== '' ? $value : '—';
+  return $dt->setTimezone(edc_date_timezone())->format($format);
+}
+
+function edc_format_relative_datetime(int $timestamp): string {
+  $now = new DateTimeImmutable('now', edc_date_timezone());
+  $dt = (new DateTimeImmutable('@' . $timestamp))->setTimezone(edc_date_timezone());
+  $diff = $now->getTimestamp() - $timestamp;
+  if ($diff < 0) $diff = 0;
+
+  if ($diff < 45) {
+    return 'À l’instant';
+  }
+  if ($diff < 120) {
+    return 'Il y a 1 minute';
+  }
+  if ($diff < 3600) {
+    return 'Il y a ' . floor($diff / 60) . ' minutes';
+  }
+  if ($diff < 7200) {
+    return 'Il y a 1 heure';
+  }
+  if ($diff < 86400) {
+    return 'Aujourd’hui à ' . $dt->format('H:i');
+  }
+  if ($diff < 172800) {
+    return 'Hier à ' . $dt->format('H:i');
+  }
+  if ($diff < 604800) {
+    return 'Il y a ' . floor($diff / 86400) . ' jours';
+  }
+  return 'Le ' . $dt->format('d.m.Y') . ' à ' . $dt->format('H:i');
+}
+
 function edc_last_ping_ts(string $folderName): ?int {
-  // Dernière présence estimée par le dernier fichier dans loc/ (mtime).
-  // Si pas de fichier, retourne null.
   if ($folderName === '' || str_contains($folderName, '..') || str_contains($folderName, '/') || str_contains($folderName, '\\')) {
     return null;
   }
 
-  $locDir = edc_users_dir() . '/' . $folderName . '/loc';
-  if (!is_dir($locDir)) return null;
-
-  $items = @scandir($locDir);
-  if (!is_array($items)) return null;
-
   $max = null;
-  foreach ($items as $item) {
-    if ($item === '.' || $item === '..') continue;
-    $path = $locDir . '/' . $item;
-    if (!is_file($path)) continue;
-    $t = @filemtime($path);
-    if ($t === false) continue;
-    if ($max === null || $t > $max) $max = $t;
+
+  $locDir = edc_users_dir() . '/' . $folderName . '/loc';
+  if (is_dir($locDir)) {
+    $items = @scandir($locDir);
+    if (is_array($items)) {
+      foreach ($items as $item) {
+        if ($item === '.' || $item === '..') continue;
+        $path = $locDir . '/' . $item;
+        if (!is_file($path)) continue;
+        $t = @filemtime($path);
+        if ($t === false) continue;
+        if ($max === null || $t > $max) $max = $t;
+      }
+    }
   }
+
+  $dbTs = edc_last_ping_db_ts($folderName);
+  if ($dbTs !== null && ($max === null || $dbTs > $max)) {
+    $max = $dbTs;
+  }
+
   return $max;
+}
+
+function edc_last_ping_db_ts(string $folderName): ?int {
+  if ($folderName === '' || str_contains($folderName, '..') || str_contains($folderName, '/') || str_contains($folderName, '\\')) {
+    return null;
+  }
+
+  $dbPath = edc_users_dir() . '/' . $folderName . '/presence.db';
+  if (!is_file($dbPath) || filesize($dbPath) === 0) {
+    return null;
+  }
+
+  try {
+    $pdo = new PDO('sqlite:' . $dbPath, null, null, [
+      PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+      PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    ]);
+    $pdo->exec('PRAGMA busy_timeout = 5000');
+    $stmt = $pdo->query('SELECT captured_at FROM presences ORDER BY captured_at DESC LIMIT 1');
+    $row = $stmt ? $stmt->fetch() : false;
+    if (is_array($row) && isset($row['captured_at'])) {
+      $dt = edc_parse_datetime((string)$row['captured_at']);
+      if ($dt) {
+        return $dt->getTimestamp();
+      }
+    }
+  } catch (Throwable $e) {
+    return null;
+  }
+
+  return null;
 }
 
 function edc_last_ping_text(string $folderName): string {
   $ts = edc_last_ping_ts($folderName);
   if ($ts === null) return '—';
-  return date('Y-m-d H:i', $ts);
+  return edc_format_relative_datetime($ts);
 }
 
 function edc_fetch_students(string $order): array {
@@ -190,7 +280,7 @@ function edc_sync_user_files(string $folderName, array $data): void {
     );
 
     $createdAt = (string)($data['created_at'] ?? $data['createdAt'] ?? '');
-    if ($createdAt === '') $createdAt = gmdate('c');
+    if ($createdAt === '') $createdAt = date('c');
 
     $stmt = $pdo->prepare(
       'INSERT INTO profile (user_id, nom, prenom, email, role, created_at, extra_json) '
